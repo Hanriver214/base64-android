@@ -9,4 +9,5 @@
     <string name="decode">解码</string>
     <string name="copy">复制结果</string>
     <string name="clear">清空</string>
+    <string name="swap">交换</string>
 </resources>

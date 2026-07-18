@@ -21,6 +21,7 @@ public class MainActivity extends AppCompatActivity {
     private Button decodeButton;
     private Button copyButton;
     private Button clearButton;
+    private Button swapButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,6 +39,7 @@ public class MainActivity extends AppCompatActivity {
         decodeButton = findViewById(R.id.decodeButton);
         copyButton = findViewById(R.id.copyButton);
         clearButton = findViewById(R.id.clearButton);
+        swapButton = findViewById(R.id.swapButton);
     }
 
     private void setupListeners() {
@@ -45,6 +47,7 @@ public class MainActivity extends AppCompatActivity {
         decodeButton.setOnClickListener(v -> decodeText());
         copyButton.setOnClickListener(v -> copyOutput());
         clearButton.setOnClickListener(v -> clearAll());
+        swapButton.setOnClickListener(v -> swapText());
     }
 
     private void encodeText() {
@@ -96,6 +99,14 @@ public class MainActivity extends AppCompatActivity {
         } catch (Exception e) {
             showToast("复制失败");
         }
+    }
+
+    private void swapText() {
+        String input = inputText.getText().toString();
+        String output = outputText.getText().toString();
+        inputText.setText(output);
+        outputText.setText(input);
+        inputText.setSelection(inputText.getText().length());
     }
 
     private void clearAll() {

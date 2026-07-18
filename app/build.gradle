@@ -18,7 +18,7 @@ android {
         release {
             def ks = System.getenv("KEYSTORE_BASE64")
             if (ks != null) {
-                storeFile = file("${buildDir}/release.keystore")
+                storeFile = file("${rootProject.buildDir}/release.keystore")
                 storePassword = System.getenv("STORE_PASSWORD") ?: ""
                 keyAlias = System.getenv("KEY_ALIAS") ?: ""
                 keyPassword = System.getenv("KEY_PASSWORD") ?: ""
@@ -31,8 +31,8 @@ android {
             minifyEnabled false
         }
         release {
-            minifyEnabled true
-            shrinkResources true
+            minifyEnabled false
+            shrinkResources false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             if (System.getenv("KEYSTORE_BASE64") != null) {
                 signingConfig signingConfigs.release
@@ -56,7 +56,7 @@ tasks.whenTaskAdded { task ->
         task.doFirst {
             def ks = System.getenv("KEYSTORE_BASE64")
             if (ks != null) {
-                def ksFile = file("${buildDir}/release.keystore")
+                def ksFile = file("${rootProject.buildDir}/release.keystore")
                 ksFile.parentFile.mkdirs()
                 ksFile.bytes = Base64.decoder.decode(ks)
             }

@@ -1,14 +1,14 @@
-name: Build APK
+name: Build and Sign APK
 
 on:
   push:
-    branches: [ main ]
     tags:
       - 'v*'
   workflow_dispatch:
 
 permissions:
   contents: write
+  id-token: write
 
 jobs:
   build:
@@ -29,28 +29,55 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Build Debug APK
-        run: ./gradlew assembleDebug
-
-      - name: Upload Debug APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: base64-debug-apk
-          path: app/build/outputs/apk/debug/*.apk
+      - name: Decode Keystore
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > app/build/release.keystore
 
       - name: Build Release APK
-        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
         run: ./gradlew assembleRelease
 
-      - name: Rename Release APK
-        if: startsWith(github.ref, 'refs/tags/')
+      - name: Verify APK signature
+        run: |
+          APK=$(find app/build/outputs/apk/release -name "*.apk" | head -1)
+          echo "APK: $APK"
+          $ANDROID_HOME/build-tools/$(ls $ANDROID_HOME/build-tools/ | sort -V | tail -1)/apksigner verify --print-certs "$APK"
+
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3
+
+      - name: Sign APK with Sigstore (keyless via OIDC)
+        run: |
+          APK=$(find app/build/outputs/apk/release -name "*.apk" | head -1)
+          cosign sign-blob --yes "$APK" --output-signature "${APK}.sig" --output-certificate "${APK}.crt"
+          echo "=== Sigstore Signature ==="
+          cat "${APK}.sig"
+          echo ""
+          echo "=== Sigstore Certificate ==="
+          cat "${APK}.crt"
+
+      - name: Verify with Cosign
+        run: |
+          APK=$(find app/build/outputs/apk/release -name "*.apk" | head -1)
+          cosign verify-blob "$APK" --signature "${APK}.sig" --certificate "${APK}.crt" --certificate-identity-regexp='https://github.com/Hanriver214/' --certificate-oidc-issuer=https://token.actions.githubusercontent.com
+
+      - name: Rename artifacts
         run: |
           cd app/build/outputs/apk/release
-          mv *.apk base64-${{ github.ref_name }}.apk
+          APK=$(ls *.apk | head -1)
+          mv "$APK" "base64-${{ github.ref_name }}.apk"
+          mv "${APK}.sig" "base64-${{ github.ref_name }}.apk.sig" 2>/dev/null || true
+          mv "${APK}.crt" "base64-${{ github.ref_name }}.apk.crt" 2>/dev/null || true
 
       - name: Create Release
-        if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v1
         with:
-          files: app/build/outputs/apk/release/base64-${{ github.ref_name }}.apk
+          files: |
+            app/build/outputs/apk/release/base64-${{ github.ref_name }}.apk
+            app/build/outputs/apk/release/base64-${{ github.ref_name }}.apk.sig
+            app/build/outputs/apk/release/base64-${{ github.ref_name }}.apk.crt
           generate_release_notes: true

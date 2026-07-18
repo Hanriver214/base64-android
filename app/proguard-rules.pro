@@ -12,3 +12,7 @@
 -keepclassmembers class * {
     @android.webkit.JavascriptInterface <methods>;
 }
+
+# Suppress R8 warnings
+-dontwarn java.lang.invoke.StringConcatFactory
+-dontwarn javax.lang.model.element.ModuleElement$DirectiveVisitor

@@ -10,8 +10,8 @@ android {
         applicationId "com.base64.android"
         minSdk 26
         targetSdk 34
-        versionCode 3
-        versionName "1.1.0"
+        versionCode 4
+        versionName "1.2.0"
     }
 
     signingConfigs {
@@ -31,8 +31,8 @@ android {
             minifyEnabled false
         }
         release {
-            minifyEnabled false
-            shrinkResources false
+            minifyEnabled true
+            shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             if (System.getenv("KEYSTORE_BASE64") != null) {
                 signingConfig signingConfigs.release
@@ -43,10 +43,6 @@ android {
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
-    }
-
-    buildFeatures {
-        viewBinding false
     }
 }
 
@@ -65,7 +61,4 @@ tasks.whenTaskAdded { task ->
 }
 
 dependencies {
-    implementation 'androidx.appcompat:appcompat:1.6.1'
-    implementation 'com.google.android.material:material:1.11.0'
-    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
 }

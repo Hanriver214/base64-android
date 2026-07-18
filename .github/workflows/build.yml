@@ -14,17 +14,20 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
-
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
 
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
       - name: Build Debug APK
-        run: gradle assembleDebug --no-daemon
+        run: ./gradlew assembleDebug
 
       - name: Upload Debug APK
         uses: actions/upload-artifact@v4
@@ -34,7 +37,7 @@ jobs:
 
       - name: Build Release APK
         if: startsWith(github.ref, 'refs/tags/')
-        run: gradle assembleRelease --no-daemon
+        run: ./gradlew assembleRelease
 
       - name: Rename Release APK
         if: startsWith(github.ref, 'refs/tags/')
